@@ -6,7 +6,7 @@ import numpy as np
 import seaborn as sns
 
 
-def minkowski_distance(a, b, p=2):
+def minkowski_distance(a:list , b, p=2):
     """
     Compute the Minkowski distance between two arrays.
 
@@ -20,6 +20,12 @@ def minkowski_distance(a, b, p=2):
     """
 
     # TODO
+
+    sumatory = 0 
+    for i in range (len(a)): 
+        sumatory += abs (a[i] - b[i]) ** p
+        
+    return sumatory** (1/p)
 
 
 # k-Nearest Neighbors Model
