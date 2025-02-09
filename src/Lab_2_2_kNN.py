@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 sns.set_theme()
 import numpy as np  
 import seaborn as sns
+from sklearn.neighbors import NearestNeighbors
 
 
-def minkowski_distance(a:list , b, p=2):
+def minkowski_distance(a:list , b:list, p=2):
     """
     Compute the Minkowski distance between two arrays.
 
@@ -23,7 +24,7 @@ def minkowski_distance(a:list , b, p=2):
 
     sumatory = 0 
     for i in range (len(a)): 
-        sumatory += abs (a[i] - b[i]) ** p
+        sumatory += float(abs (a[i] - b[i]) ** p)
         
     return sumatory** (1/p)
 
@@ -42,6 +43,7 @@ class knn:
         self.y_train = None
 
     def fit(self, X_train: np.ndarray, y_train: np.ndarray, k: int = 5, p: int = 2):
+        # simplemente declaramos los datos dados como atributos del objeto 
         """
         Fit the model using X as training data and y as target values.
 
@@ -56,9 +58,49 @@ class knn:
             k (int, optional): Number of neighbors to use. Defaults to 5.
             p (int, optional): The degree of the Minkowski distance. Defaults to 2.
         """
-        # TODO
+        # primero, chequeamos que los parámetros son correctos 
+        
+        if X_train.shape[0] == y_train.shape[0]: 
+            if type(k) == int and k > 0  : 
+                if  type(p) == int and p> 0  : 
+                    # todos los parámetros han sido chequeados hasta aquí 
+                    self.k = k 
+                    self.p = p
+                    self.x_train = X_train
+                    self.y_train = y_train
+                                
+                else: 
+                    raise ValueError("k and p must be positive integers.")
+            else: 
+                raise ValueError ("k and p must be positive integers.")
+        else: 
+            raise ValueError("Length of X_train and y_train must be equal.")
+        
+       
+                    
+   
+    def find_nearest_kneighours (self, x): 
+        distances = []
+
+        #comparamos este dato con todas las distancias de nuestro train set 
+        for i in range (len(self.x_train)):
+            train_data = self.x_train[i] 
+            label = self.y_train[i]
+            # calculamos la distancia de este dato nuevo con todos los datos que tenemos 
+            distance = minkowski_distance(x, train_data, p = self.p)
+
+            # añadimos esta distancia y su correspondiente etiqueta a una lista de distancias 
+            distances.append((distance, label))
+            
+        # ordenamos la lista de distancias por la distancia en orden ascendente 
+        ordered_distances = sorted(distances, key=lambda x : x[0])
+        # de todos los nodos ordenados, cojo los k primeros 
+        nearest = ordered_distances[:self.k]
+        return nearest 
+        
 
     def predict(self, X: np.ndarray) -> np.ndarray:
+       
         """
         Predict the class labels for the provided data.
 
@@ -68,9 +110,31 @@ class knn:
         Returns:
             np.ndarray: Predicted class labels.
         """
-        # TODO
+        predicted_classes = []
 
-    def predict_proba(self, X):
+        # para cada dato de la lista X: 
+        for x in X:
+            # calculo los nodos más cercanos a cada dato 
+            nearest = self.find_nearest_kneighours(x)
+
+            # de los nodos más cercanos, cojo sus etiquetas y cuento la frecuencia con la que aparecen 
+            labels = {}
+            for  (_, label) in nearest : 
+                if label not in labels: 
+                    labels[label] = 1
+                else:
+                    labels[label]+=1 
+
+            #finalmente, la etiqueta para ese dato de X será la más frecuente entre sus vecinos 
+            clase_max = max(labels, key=labels.get)
+            predicted_classes.append(clase_max)
+
+        return np.ndarray(predicted_classes)
+
+
+
+    def predict_proba(self, X:np.ndarray)-> np.ndarray:
+
         """
         Predict the class probabilities for the provided data.
 
@@ -83,7 +147,28 @@ class knn:
         Returns:
             np.ndarray: Predicted class probabilities.
         """
-        # TODO
+        # lista de clases totales posiblles 
+        class_probabilities = 
+
+        # para cada dato de la lista X: 
+        for x in X:
+            # calculo los nodos más cercanos a cada dato 
+            nearest = self.find_nearest_kneighours(x)
+
+            labels = {} #hago lo mismo que en la función anterior, cojo las etiquetas y cuento cuantas veces aparecen 
+            for  (_, label) in nearest : 
+                if label not in labels: 
+                    labels[label] = 1
+                else:
+                    labels[label]+=1 
+            #ahora, en vez de escoger una clase como tal, devuelvo un diccionario con cada clase y la prob de que sea de esa clase 
+            # la probabilidad la calculamos cogiendo el contador de labels y dividiéndolo por el numero de vecinos totales (self.k)
+            for i in labels: 
+                labels[i] = labels[i] / self.k  
+   
+            class_probabilities.append(labels)
+        
+        return np.ndarray(class_probabilities)
 
     def compute_distances(self, point: np.ndarray) -> np.ndarray:
         """Compute distance from a point to every point in the training dataset
@@ -155,6 +240,7 @@ def plot_2Dmodel_predictions(X, y, model, grid_points_n):
 
     # Predict on input data
     preds = model.predict(X)
+    print (" datos predecidos")
 
     # Determine TP, FP, FN, TN
     tp = (y == unique_labels[1]) & (preds == unique_labels[1])
