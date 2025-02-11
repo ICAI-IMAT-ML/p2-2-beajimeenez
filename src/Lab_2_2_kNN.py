@@ -301,9 +301,7 @@ def plot_2Dmodel_predictions(X, y, model, grid_points_n):
     ax[1].set_title("Classes and Estimated Probability Contour Lines")
 
     # Plot contour lines for probabilities
-    cnt = ax[1].contourf(xx, yy, probs, levels=np.linspace(0, 1, 20), cmap="coolwarm", alpha=0.6)
-    plt.colorbar(cnt, ax=ax[1]) 
-
+    cnt = ax[1].contour(xx, yy, probs, levels=np.arange(0, 1.1, 0.1), colors = "black")
     ax[1].clabel(cnt, inline=True, fontsize=8)
 
     # Show the plot
@@ -433,10 +431,9 @@ def plot_calibration_curve(y_true, y_probs, positive_label, n_bins=10):
 
     for j in range(n_bins): 
        
-        #definimos el rango 
+        #definimos los limites del rango  
         lim_inf = particiones[j]
         lim_sup = particiones[j + 1]
-        
 
         # guardamos los indices de aquellas probabilidades que se encuentren en este rango 
         y_index = [i for i in range(len(y_probs)) if lim_inf <= y_probs[i] < lim_sup]
